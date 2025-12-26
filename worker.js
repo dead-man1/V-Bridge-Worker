@@ -1,59 +1,83 @@
 /**
- * V-Bridge: Final Stable Edition
- * Fixed WebSocket Handshake & GET Body issues.
+ * V-Bridge: High-Performance Edge Data Relay
+ * Optimized for low-latency streaming and bi-directional stealth.
  */
 
-const MASK_PAGE = `<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr><center>nginx</center></body></html>`;
+const DECOY_HTML = `<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr><center>nginx</center></body></html>`;
+const FILTER_LIST = new Set(['/favicon.ico', '/robots.txt', '/.env', '/.git']);
+const REQ_STRIP = ['cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 'cf-visitor', 'x-forwarded-for', 'x-real-ip', 'forwarded'];
+const RES_STRIP = ['cf-ray', 'alt-svc', 'cf-cache-status', 'x-powered-by', 'x-cloudflare-request-id'];
 
 export default {
   async fetch(request, env) {
     try {
       const url = new URL(request.url);
-      const segments = url.pathname.split('/').filter(Boolean);
+      const path = url.pathname;
 
-      // 1. Stealth & Root Check
-      if (segments.length < 2) {
-        return new Response(MASK_PAGE, {
-          status: 404,
+      // 1. Request Filtering (Resource Preservation)
+      if (path === '/' || FILTER_LIST.has(path)) {
+        return new Response(path === '/' ? DECOY_HTML : null, {
+          status: path === '/' ? 404 : 204,
           headers: { 'content-type': 'text/html', 'server': 'nginx' }
         });
       }
 
-      // 2. Construct Destination
-      const targetHost = segments[0];
-      const targetPath = '/' + segments.slice(1).join('/');
-      const destination = `https://${targetHost}${targetPath}${url.search}`;
+      const segments = path.split('/').filter(Boolean);
+      if (segments.length < 2) {
+        return new Response(DECOY_HTML, { status: 404, headers: { 'server': 'nginx' } });
+      }
 
-      // 3. Prepare Headers
+      // 2. Dynamic Routing Logic
+      let hostIndex = 0;
+      let protocol = 'https'; 
+
+      if (segments[0] === 'http' || segments[0] === 'https') {
+        protocol = segments[0];
+        hostIndex = 1;
+      }
+
+      const targetHost = segments[hostIndex];
+      const targetPath = '/' + segments.slice(hostIndex + 1).join('/');
+      const destination = `${protocol}://${targetHost}${targetPath}${url.search}`;
+
+      // 3. Header Sanitization
       const newHeaders = new Headers(request.headers);
       newHeaders.set('Host', targetHost.split(':')[0]);
-      
-      // Clean sensitive headers
-      ['cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 'cf-visitor', 'x-forwarded-for', 'x-real-ip'].forEach(h => newHeaders.delete(h));
+      REQ_STRIP.forEach(h => newHeaders.delete(h));
 
-      // 4. Handle Request (Fix: No body for GET/HEAD)
-      const fetchConfig = {
+      // 4. Relay Configuration
+      const relayConfig = {
         method: request.method,
         headers: newHeaders,
-        redirect: 'manual'
+        redirect: 'manual',
+        signal: request.signal,
+        cf: { cacheTtl: 0, cacheEverything: false }
       };
 
       if (request.method !== 'GET' && request.method !== 'HEAD') {
-        fetchConfig.body = request.body;
+        relayConfig.body = request.body;
       }
 
-      // 5. Execute Fetch
-      const response = await fetch(destination, fetchConfig);
+      // 5. Execution with Auto-Fallback (SSL Resilience)
+      let response = await fetch(destination, relayConfig);
+      
+      if (response.status >= 525 && protocol === 'https') {
+        const fallbackUrl = `http://${targetHost}${targetPath}${url.search}`;
+        response = await fetch(fallbackUrl, relayConfig);
+      }
 
-      // 6. Handle WebSocket Upgrade (Critical for VLESS)
-      if (request.headers.get('Upgrade')?.toLowerCase() === 'websocket') {
+      // 6. Protocol Upgrade Handling (WebSocket Support)
+      if (response.status === 101 || request.headers.get('Upgrade')?.toLowerCase() === 'websocket') {
         return response;
       }
 
-      // 7. Mask Regular Responses (Nginx Spoofing)
+      // 7. Response Masking (Stealth Engine)
       const outHeaders = new Headers(response.headers);
-      ['cf-ray', 'alt-svc', 'cf-cache-status', 'x-powered-by'].forEach(h => outHeaders.delete(h));
+      RES_STRIP.forEach(h => outHeaders.delete(h));
+      
       outHeaders.set('Server', 'nginx');
+      outHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+      outHeaders.set('X-Content-Type-Options', 'nosniff');
 
       return new Response(response.body, {
         status: response.status,
@@ -62,6 +86,7 @@ export default {
       });
 
     } catch (err) {
+      // Silent fail for maximum stability
       return new Response(null, { status: 499 });
     }
   }
