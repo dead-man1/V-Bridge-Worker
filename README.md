@@ -1,41 +1,39 @@
-# V-Bridge Worker 🚀
-A high-performance, stealthy, and universal reverse proxy built on Cloudflare Workers. Specifically designed to bypass heavy network restrictions and censorship for VLESS and VMess protocols.
+# V-Bridge 🚀
+A high-performance, stealthy, and universal edge router built on Cloudflare Workers. Designed for low-latency data streaming and secure routing across edge networks.
 
 ## ✨ Key Features
-- **Universal Port Support:** Proxy any target host on any port (e.g., `domain.com:10002`).
-- **Stealth Engine:** Built-in Nginx-style **404 Not Found** decoy page to protect against active probing and GFW scanners.
-- **Privacy Focused:** Automatically strips sensitive Cloudflare headers to increase anonymity and prevent IP leaks.
-- **Low Latency:** Optimized code for minimal overhead, ensuring the best possible ping for gaming and voice calls.
-- **Full UDP Support:** Compatible with UDP encapsulation for Telegram Voice, WhatsApp, and online gaming.
-- **Multi-Port Compatibility:** Works with all Cloudflare-supported HTTP and HTTPS ports.
+- **Universal Routing:** Dynamically route traffic to any destination host and port via URL paths.
+- **Zero-Latency Streaming:** Optimized for real-time data transfer with minimal overhead.
+- **Double Stealth Engine:** Bi-directional header masking (Nginx spoofing) to remain invisible to active probing.
+- **Request Efficiency:** Built-in noise filtering to preserve daily request limits.
+- **Privacy Focused:** Automatically sanitizes sensitive headers to prevent tracking and IP leaks.
+- **Full UDP Support:** Perfectly compatible with UDP encapsulation for high-quality voice/video calls and gaming.
 
 ## 🛠 Deployment
 1. Create a new **Worker** in your Cloudflare dashboard.
 2. Copy the content of `worker.js` from this repository.
 3. Paste it into the Worker editor and click **Deploy**.
 
-## 📖 Configuration Guide (v2rayNG, Nekobox, etc.)
-To use this worker, modify your VLESS/VMess client settings as follows:
+## 📖 Configuration Guide
+Update your client (v2rayNG, Nekobox, etc.) with the following settings:
 
-### 1. Connection Settings
-- **Address:** A clean Cloudflare IP (e.g., `www.speedtest.net` or a custom clean IP for your ISP).
+### 1. Connection Details
+- **Address:** A clean Cloudflare IP (e.g., `www.speedtest.net`).
 - **Request Host:** `your-worker.workers.dev`
 - **SNI:** `your-worker.workers.dev`
 - **TLS:** Enabled (for HTTPS ports) or Disabled (for HTTP ports).
 
 ### 2. Dynamic Path Format
-The path must follow this structure: `/{TARGET_HOST}:{PORT}/{ORIGINAL_PATH}`
-
+The path structure is: `/{TARGET_HOST}:{PORT}/{ORIGINAL_PATH}`
 - **Standard Port (443):** `/my-server.com/ws`
 - **Custom Port (10002):** `/my-server.com:10002/ws`
 
-### 3. Supported Cloudflare Ports
-You can use any of these ports in your client:
+### 3. Supported Ports
 - **HTTPS (TLS ON):** `443, 2053, 2083, 2087, 2096, 8443`
 - **HTTP (TLS OFF):** `80, 8080, 8880, 2052, 2082, 2086, 2095`
 
 ## 🔒 Security & Stealth
-This worker is designed to be invisible. If anyone visits your Worker URL directly without the correct path format, they will see a standard **Nginx 404 Not Found** page. This hides the proxy's existence from unauthorized users and automated scanners.
+V-Bridge is designed to be invisible. Direct access to the Worker URL returns a standard **Nginx 404 Not Found** page. The source code is sanitized to ensure long-term stability and prevent automated detection by edge providers.
 
 ## License
 [MIT](LICENSE)
