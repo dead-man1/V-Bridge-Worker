@@ -1,51 +1,68 @@
 /**
- * V-Bridge: High-Performance Edge Router
- * Optimized for speed and stealth.
+ * V-Bridge: Final Stable Edition
+ * Fixed WebSocket Handshake & GET Body issues.
  */
 
-const PAGE_404 = `<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr><center>nginx</center></body></html>`;
+const MASK_PAGE = `<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr><center>nginx</center></body></html>`;
 
 export default {
-  async fetch(req, env) {
-    const url = new URL(req.url);
-    const parts = url.pathname.split('/').filter(Boolean);
-
-    // Stealth check: Return fake Nginx page for invalid requests
-    if (parts.length < 2) {
-      return new Response(PAGE_404, {
-        status: 404,
-        headers: { 'Content-Type': 'text/html' }
-      });
-    }
-
-    // Dynamic routing logic (Supports Host:Port)
-    const targetHost = parts[0]; 
-    const targetPath = '/' + parts.slice(1).join('/');
-    const finalUrl = `https://${targetHost}${targetPath}${url.search}`;
-
-    const newHeaders = new Headers(req.headers);
-    
-    // Set clean Host header (removes port if present)
-    newHeaders.set('Host', targetHost.split(':')[0]);
-
-    // Strip sensitive headers for privacy and performance
-    const dropList = [
-      'cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 'cf-visitor', 
-      'x-forwarded-for', 'x-real-ip', 'forwarded'
-    ];
-    dropList.forEach(h => newHeaders.delete(h));
-
+  async fetch(request, env) {
     try {
-      // High-speed fetch with manual redirect handling
-      return await fetch(finalUrl, {
-        method: req.method,
+      const url = new URL(request.url);
+      const segments = url.pathname.split('/').filter(Boolean);
+
+      // 1. Stealth & Root Check
+      if (segments.length < 2) {
+        return new Response(MASK_PAGE, {
+          status: 404,
+          headers: { 'content-type': 'text/html', 'server': 'nginx' }
+        });
+      }
+
+      // 2. Construct Destination
+      const targetHost = segments[0];
+      const targetPath = '/' + segments.slice(1).join('/');
+      const destination = `https://${targetHost}${targetPath}${url.search}`;
+
+      // 3. Prepare Headers
+      const newHeaders = new Headers(request.headers);
+      newHeaders.set('Host', targetHost.split(':')[0]);
+      
+      // Clean sensitive headers
+      ['cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 'cf-visitor', 'x-forwarded-for', 'x-real-ip'].forEach(h => newHeaders.delete(h));
+
+      // 4. Handle Request (Fix: No body for GET/HEAD)
+      const fetchConfig = {
+        method: request.method,
         headers: newHeaders,
-        body: req.body,
         redirect: 'manual'
+      };
+
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        fetchConfig.body = request.body;
+      }
+
+      // 5. Execute Fetch
+      const response = await fetch(destination, fetchConfig);
+
+      // 6. Handle WebSocket Upgrade (Critical for VLESS)
+      if (request.headers.get('Upgrade')?.toLowerCase() === 'websocket') {
+        return response;
+      }
+
+      // 7. Mask Regular Responses (Nginx Spoofing)
+      const outHeaders = new Headers(response.headers);
+      ['cf-ray', 'alt-svc', 'cf-cache-status', 'x-powered-by'].forEach(h => outHeaders.delete(h));
+      outHeaders.set('Server', 'nginx');
+
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: outHeaders
       });
+
     } catch (err) {
-      // Silent fail to prevent detection
-      return new Response(null, { status: 500 });
+      return new Response(null, { status: 499 });
     }
   }
 };
