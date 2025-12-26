@@ -1,4 +1,4 @@
-# V-Bridge 🚀
+# V-Bridge-Worker 🚀
 A high-performance, stealthy, and universal edge router built on Cloudflare Workers. Designed for low-latency data streaming and secure routing across edge networks.
 
 ## ✨ Key Features
