@@ -1,11 +1,12 @@
-# V-Bridge-Worker 🚀
-A high-performance, stealthy, and universal edge router built on Cloudflare Workers. Designed for low-latency data streaming and secure routing across edge networks.
+# V-Bridge-Worker🚀
+A high-performance, stealthy, and universal edge data relay built on Cloudflare Workers. Designed for low-latency streaming and secure traffic management across edge networks.
 
 ## ✨ Key Features
-- **Universal Routing:** Dynamically route traffic to any destination host and port via URL paths.
-- **Zero-Latency Streaming:** Optimized for real-time data transfer with minimal overhead.
+- **Universal Routing:** Dynamically relay traffic to any destination host and port via URL paths.
+- **Auto-Protocol Detection:** Intelligent fallback from HTTPS to HTTP for targets without SSL certificates.
+- **Zero-Latency Streaming:** Optimized for real-time data transfer (WebSocket) with no buffering.
 - **Double Stealth Engine:** Bi-directional header masking (Nginx spoofing) to remain invisible to active probing.
-- **Request Efficiency:** Built-in noise filtering to preserve daily request limits.
+- **Request Efficiency:** Built-in noise filtering (Favicon/Bots) to preserve daily request limits.
 - **Privacy Focused:** Automatically sanitizes sensitive headers to prevent tracking and IP leaks.
 - **Full UDP Support:** Perfectly compatible with UDP encapsulation for high-quality voice/video calls and gaming.
 
@@ -15,7 +16,7 @@ A high-performance, stealthy, and universal edge router built on Cloudflare Work
 3. Paste it into the Worker editor and click **Deploy**.
 
 ## 📖 Configuration Guide
-Update your client (v2rayNG, Nekobox, etc.) with the following settings:
+Update your client settings as follows:
 
 ### 1. Connection Details
 - **Address:** A clean Cloudflare IP (e.g., `www.speedtest.net`).
@@ -27,6 +28,7 @@ Update your client (v2rayNG, Nekobox, etc.) with the following settings:
 The path structure is: `/{TARGET_HOST}:{PORT}/{ORIGINAL_PATH}`
 - **Standard Port (443):** `/my-server.com/ws`
 - **Custom Port (10002):** `/my-server.com:10002/ws`
+- **Auto-Fallback:** If the target lacks SSL, the relay automatically switches to HTTP.
 
 ### 3. Supported Ports
 - **HTTPS (TLS ON):** `443, 2053, 2083, 2087, 2096, 8443`
