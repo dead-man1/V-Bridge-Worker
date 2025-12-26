@@ -3,9 +3,10 @@ A high-performance, stealthy, and universal reverse proxy built on Cloudflare Wo
 
 ## 🌟 Features
 - **Universal Routing:** Proxy any target host dynamically via the URL path without modifying the code.
-- **Stealth Mode:** Built-in Nginx-style **404 Not Found** decoy page to bypass active probing and scanners.
-- **Privacy Focused:** Automatically strips sensitive Cloudflare headers (like `cf-connecting-ip`) to increase anonymity.
+- **Stealth Mode:** Built-in Nginx-style **404 Not Found** decoy page to bypass active probing.
+- **Privacy Focused:** Automatically strips sensitive Cloudflare headers to increase anonymity.
 - **WebSocket & UDP:** Full support for VLESS/VMess over WebSocket, including UDP encapsulation for Voice calls and Gaming.
+- **Multi-Port Support:** Compatible with all Cloudflare-supported HTTP and HTTPS ports.
 
 ## 🛠 Deployment
 1. Log in to your **Cloudflare Dashboard**.
@@ -14,19 +15,28 @@ A high-performance, stealthy, and universal reverse proxy built on Cloudflare Wo
 4. Paste it into the Worker editor, then click **Save and Deploy**.
 
 ## 📖 How to Use
-To use this worker, you need to modify your VLESS/VMess client configuration (v2rayNG, Nekobox, etc.) as follows:
+Modify your VLESS/VMess client configuration (v2rayNG, Nekobox, etc.) as follows:
 
-- **Address:** Use a clean Cloudflare IP or a CDN-friendly domain (e.g., `www.speedtest.net` or `discord.com`).
-- **Port:** `443`
+### 1. Connection Settings
+- **Address:** Use a clean Cloudflare IP or a CDN-friendly domain (e.g., `www.speedtest.net`).
 - **Request Host:** `your-worker-name.your-subdomain.workers.dev`
 - **SNI:** `your-worker-name.your-subdomain.workers.dev`
 - **Path:** `/{TARGET_HOST}/{ORIGINAL_PATH}`
-  - *Example:* If your server is `de-full.privateip.net` and the path is `/ws`, your new path will be: `/de-full.privateip.net/ws`
-- **TLS:** Enabled (ON)
-- **Fingerprint:** `chrome` or `random`
+  - *Example:* If your target server is `my-secret-server.com` and the path is `/graphql`, your new path will be: `/my-secret-server.com/graphql`
+
+### 2. Port & TLS Options
+This worker supports all standard Cloudflare ports. Choose based on your needs:
+
+#### **HTTPS (TLS Enabled)**
+Recommended for security. Use these ports with **TLS ON**:
+`443, 2053, 2083, 2087, 2096, 8443`
+
+#### **HTTP (TLS Disabled)**
+Use these ports with **TLS OFF**:
+`80, 8080, 8880, 2052, 2082, 2086, 2095`
 
 ## 🔒 Security & Stealth
-This worker is designed to be invisible. If anyone (or any automated scanner) visits your Worker URL directly without the correct path format, they will be greeted with a standard **Nginx 404 Not Found** page. This hides the fact that the URL is being used as a proxy bridge.
+This worker is designed to be invisible. If anyone visits your Worker URL directly without the correct path format, they will see a standard **Nginx 404 Not Found** page. This hides the proxy's existence from scanners and unauthorized users.
 
 ## 📄 License
 This project is licensed under the [MIT License](LICENSE).
