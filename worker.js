@@ -1,69 +1,50 @@
 /**
- * V-Bridge Worker: A Universal Reverse Proxy for WebSocket-based Protocols.
- * 
- * This worker acts as a stealthy bridge to bypass network restrictions.
- * It dynamically routes traffic to any target host specified in the URL path.
+ * V-Bridge: High-Performance Edge Router
+ * Optimized for speed and stealth.
  */
 
-const FAKE_PAGE = `
-<html>
-  <head><title>404 Not Found</title></head>
-  <body>
-    <center><h1>404 Not Found</h1></center>
-    <hr><center>nginx</center>
-  </body>
-</html>`;
+const PAGE_404 = `<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr><center>nginx</center></body></html>`;
 
 export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
-    const pathParts = url.pathname.split('/').filter(Boolean);
+  async fetch(req, env) {
+    const url = new URL(req.url);
+    const parts = url.pathname.split('/').filter(Boolean);
 
-    // 1. Stealth Mode: Return fake 404 if the request is invalid or direct access
-    if (pathParts.length < 2) {
-      return new Response(FAKE_PAGE, {
+    // Stealth check: Return fake Nginx page for invalid requests
+    if (parts.length < 2) {
+      return new Response(PAGE_404, {
         status: 404,
         headers: { 'Content-Type': 'text/html' }
       });
     }
 
-    // 2. Extract Target Information
-    // Format: https://your-worker.dev/TARGET_HOST/TARGET_PATH
-    const targetHost = pathParts[0];
-    const targetPath = '/' + pathParts.slice(1).join('/');
-    const targetUrl = `https://${targetHost}${targetPath}${url.search}`;
+    // Dynamic routing logic (Supports Host:Port)
+    const targetHost = parts[0]; 
+    const targetPath = '/' + parts.slice(1).join('/');
+    const finalUrl = `https://${targetHost}${targetPath}${url.search}`;
 
-    // 3. Prepare Clean Headers
-    const newHeaders = new Headers(request.headers);
+    const newHeaders = new Headers(req.headers);
     
-    // Set Host header to target to avoid SNI mismatch at destination
-    newHeaders.set('Host', targetHost);
+    // Set clean Host header (removes port if present)
+    newHeaders.set('Host', targetHost.split(':')[0]);
 
-    // Remove Cloudflare-specific headers to increase anonymity
-    const headersToRemove = [
-      'cf-connecting-ip',
-      'cf-ipcountry',
-      'cf-ray',
-      'cf-visitor',
-      'x-forwarded-for',
-      'x-real-ip'
+    // Strip sensitive headers for privacy and performance
+    const dropList = [
+      'cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 'cf-visitor', 
+      'x-forwarded-for', 'x-real-ip', 'forwarded'
     ];
-    headersToRemove.forEach(h => newHeaders.delete(h));
+    dropList.forEach(h => newHeaders.delete(h));
 
-    // 4. Proxy the Request
     try {
-      const response = await fetch(targetUrl, {
-        method: request.method,
+      // High-speed fetch with manual redirect handling
+      return await fetch(finalUrl, {
+        method: req.method,
         headers: newHeaders,
-        body: request.body,
-        redirect: 'manual' // Important for maintaining tunnel integrity
+        body: req.body,
+        redirect: 'manual'
       });
-
-      // 5. Return the response as-is (Supports WebSocket & UDP encapsulation)
-      return response;
-
-    } catch (error) {
-      // Log error internally if needed, but return a generic response to the user
+    } catch (err) {
+      // Silent fail to prevent detection
       return new Response(null, { status: 500 });
     }
   }
