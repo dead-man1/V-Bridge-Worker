@@ -1,19 +1,26 @@
 # V-Bridge-Worker 🚀
 
-A high-performance, stealthy, and universal edge data relay built on Cloudflare Workers. Optimized for low-latency streaming, bi-directional masking, and secure traffic management.
+A universal reverse proxy for **VLESS/VMess WebSocket** configurations on Cloudflare Workers. Specifically designed to bypass network restrictions, fix direct connection issues, and enhance privacy for edge-based tunneling.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform: Cloudflare Workers](https://img.shields.io/badge/Platform-Cloudflare_Workers-orange.svg)](https://workers.cloudflare.com/)
 
+## 🎯 Purpose
+
+V-Bridge-Worker acts as a secure bridge between your client and your target server. It is ideal for:
+- **Bypassing Censorship:** Fixes connection issues for VLESS/VMess configs that are blocked or filtered in your region.
+- **IP Masking:** Hides your real IP from the target server provider.
+- **SSL Offloading:** Provides a valid Cloudflare SSL/TLS layer for non-SSL target IPs.
+
 ## ✨ Key Features
 
-- **Universal Routing:** Dynamically relay traffic to any destination host and port via URL paths.
-- **Auto-Protocol Fallback:** Intelligent fallback from HTTPS to HTTP for targets without SSL certificates.
-- **Zero-Latency Streaming:** Optimized for real-time data transfer (WebSocket) with no buffering.
-- **Double Stealth Engine:** Bi-directional header masking (Nginx spoofing) to remain invisible to active probing.
-- **Request Efficiency:** Built-in noise filtering (Favicon, Bots) to preserve your daily 100k request limits.
-- **Privacy Focused:** Automatically sanitizes sensitive headers to prevent tracking and IP leaks.
-- **Full UDP Support:** Perfectly compatible with UDP encapsulation for high-quality voice/video calls and gaming.
+- **Universal VLESS/VMess Proxy:** Works with any WebSocket-based configuration.
+- **Bypass Direct Filtering:** Routes your traffic through Cloudflare's global network to bypass local blocks.
+- **Auto-Protocol Fallback:** Automatically switches to HTTP if the target server lacks an SSL certificate.
+- **Zero-Latency Streaming:** Optimized for real-time data transfer with no buffering.
+- **Double Stealth Engine:** Bi-directional header masking (Nginx spoofing) to remain invisible to DPI scanners.
+- **Request Efficiency:** Built-in noise filtering to preserve your daily 100k request limits.
+- **Full UDP Support:** Compatible with UDP encapsulation for high-quality voice calls and gaming.
 
 ## 🛠 Deployment
 
@@ -40,16 +47,12 @@ The path structure is: `/{TARGET_HOST}:{PORT}/{ORIGINAL_PATH}`
 - **Custom Port (10002):** `/my-server.com:10002/ws`
 - **Auto-Fallback:** If the target lacks SSL, the relay automatically switches to HTTP.
 
-### 3. Supported Cloudflare Ports
-- **HTTPS (TLS ON):** `443, 2053, 2083, 2087, 2096, 8443`
-- **HTTP (TLS OFF):** `80, 8080, 8880, 2052, 2082, 2086, 2095`
-
 ## 🔒 Security & Stealth
 
 V-Bridge-Worker is designed to be invisible. 
 - **Decoy Mode:** Direct access to the Worker URL returns a standard **Nginx 404 Not Found** page.
-- **Header Masking:** All Cloudflare-specific fingerprints are stripped from both requests and responses, mimicking a standalone Nginx server.
-- **Sanitized Code:** No sensitive keywords are used in the source code to ensure long-term stability.
+- **Header Masking:** All Cloudflare-specific fingerprints are stripped, mimicking a standalone Nginx server.
+- **Sanitized Code:** No sensitive keywords are used in the source code to prevent automated detection by edge providers.
 
 ## 📄 License
 
