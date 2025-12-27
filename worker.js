@@ -1,6 +1,7 @@
 /**
- * V-Bridge: High-Performance Edge Data Relay
- * Optimized for low-latency streaming and bi-directional stealth.
+ * V-Bridge-Worker
+ * A high-performance, stealthy, and universal edge data relay.
+ * Optimized for low-latency streaming and bi-directional masking.
  */
 
 const DECOY_HTML = `<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr><center>nginx</center></body></html>`;
@@ -9,16 +10,22 @@ const REQ_STRIP = ['cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 'cf-visitor', '
 const RES_STRIP = ['cf-ray', 'alt-svc', 'cf-cache-status', 'x-powered-by', 'x-cloudflare-request-id'];
 
 export default {
-  async fetch(request, env) {
+  /**
+   * Main fetch handler
+   */
+  async fetch(request, env, ctx) {
     try {
       const url = new URL(request.url);
       const path = url.pathname;
 
-      // 1. Request Filtering (Resource Preservation)
+      // 1. Resource Preservation & Stealth Engine
       if (path === '/' || FILTER_LIST.has(path)) {
         return new Response(path === '/' ? DECOY_HTML : null, {
           status: path === '/' ? 404 : 204,
-          headers: { 'content-type': 'text/html', 'server': 'nginx' }
+          headers: { 
+            'content-type': 'text/html',
+            'server': 'nginx' 
+          }
         });
       }
 
@@ -29,7 +36,7 @@ export default {
 
       // 2. Dynamic Routing Logic
       let hostIndex = 0;
-      let protocol = 'https'; 
+      let protocol = 'https';
 
       if (segments[0] === 'http' || segments[0] === 'https') {
         protocol = segments[0];
@@ -86,7 +93,7 @@ export default {
       });
 
     } catch (err) {
-      // Silent fail for maximum stability
+      // Silent fail to maintain invisibility
       return new Response(null, { status: 499 });
     }
   }
