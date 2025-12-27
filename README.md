@@ -35,7 +35,7 @@ Update your client (v2rayNG, Nekobox, etc.) with the following settings:
 
 ### 1. Connection Details
 - **Address:** A clean Cloudflare IP (e.g., `www.speedtest.net`).
-- **Port:** `443` (Recommended) or any supported Cloudflare port.
+- **Port:** `443` (Recommended) or any supported Cloudflare port listed below.
 - **Request Host:** `your-worker-name.your-subdomain.workers.dev`
 - **SNI:** `your-worker-name.your-subdomain.workers.dev`
 - **TLS:** Enabled (for HTTPS ports) or Disabled (for HTTP ports).
@@ -47,13 +47,17 @@ The path structure is: `/{TARGET_HOST}:{PORT}/{ORIGINAL_PATH}`
 - **Custom Port (10002):** `/my-server.com:10002/ws`
 - **Auto-Fallback:** If the target lacks SSL, the relay automatically switches to HTTP.
 
+## 🌐 Supported Cloudflare Ports
+
+You can use any of the following ports in your client configuration:
+
+| Protocol | Supported Ports |
+| :--- | :--- |
+| **HTTPS (TLS ON)** | `443, 2053, 2083, 2087, 2096, 8443` |
+| **HTTP (TLS OFF)** | `80, 8080, 8880, 2052, 2082, 2086, 2095` |
+
 ## 🔒 Security & Stealth
 
 V-Bridge-Worker is designed to be invisible. 
 - **Decoy Mode:** Direct access to the Worker URL returns a standard **Nginx 404 Not Found** page.
-- **Header Masking:** All Cloudflare-specific fingerprints are stripped, mimicking a standalone Nginx server.
-- **Sanitized Code:** No sensitive keywords are used in the source code to prevent automated detection by edge providers.
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
+- **Header Masking:** All Cloudflare-specific fingerprints are stripped, mimicking a standalone
